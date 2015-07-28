@@ -1,0 +1,6 @@
+.coverage
+.ropeproject
+*.swp
+*.swo
+.tox
+__pycache__

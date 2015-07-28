@@ -1,0 +1,105 @@
+from .base import API, Model
+import numbers
+{% for model in api.models %}
+
+
+class {{model.name}}(Model):
+    def __init__({{model.fields | as_args}}, **kwargs):
+        {% for field in model.fields %}
+        {% if field.required %}
+        if {{field.name}} is None:
+            raise TypeError("Argument `{{field.name}}` is required but its value is None")
+        {% endif %}
+        {# First try to convert to the given type #}
+        {# convert dict to a Model object #}
+        {% if field.type | is_model(api.models) %}
+        if isinstance({{field.name}}, dict):
+            {{field.name}} = {{field.type}}(**{{field.name}})
+        {% endif %}
+        {# convert list to a list of Model object #}
+        {% if field.type == "list" and field.items | is_model(api.models) %}
+        if isinstance({{field.name}}, list):
+            {{field.name}} = [{{field.items}}(**e) for e in {{field.name}}]
+        {% endif %}
+        {# Bug: dates are declared as strings, but given as int in the json #}
+        {% if field.type == "str" %}
+        if type({{field.name}}) is int:
+            {{field.name}} = str({{field.name}})
+        {% endif %}
+        {# Numbers are convertible #}
+        if isinstance({{field.name}}, numbers.Number):
+            {{field.name}} = {{field.type}}({{field.name}})
+        {# Now check the type #}
+        if not (isinstance({{field.name}}, {{field.type}})) and {{field.name}} is not None:
+            raise TypeError("Argument `{{field.name}}` is not of type `{{field.type}}` (%s)" % str(type({{field.name}})))
+        self.{{field.name}} = {{field.name}}
+        {% endfor %}
+        self._extra_ = kwargs
+{% endfor %}
+
+
+class {{api.name}}(API):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    {% for endpoint in api.endpoints %}
+
+    def {{endpoint.name}}({{endpoint.parameters | as_args}}):
+        """
+        {{endpoint.description}}
+
+        ({{endpoint.method}} {{endpoint.path}})
+
+        {% for p in endpoint.parameters %}
+        :param {{p.name}}: {{p.description}}
+        :type {{p.name}}: {{p.type}}
+        {% endfor %}
+        {% set rtype = "Nothing" if endpoint.return_.type == "void" else endpoint.return_.type %}
+        {% set rtype = "list(" + endpoint.return_.items + ")" if rtype == "array" else rtype %}
+        :rtype: {{rtype}}
+        """
+
+        {% for parameter in endpoint.parameters %}
+        {% if not parameter.type %}
+            if {{parameter.required}} and {{parameter.name}} is None:
+                raise TypeError("Argument `{{parameter.name}}` is required but its value is None")
+            if not (isinstance({{parameter.name}}, {{parameter.type}})):
+                # Bug: dates are declared as strings, but given as int in the json
+                if ({{parameter.type}} is str and type({{parameter.name}}) is not int)
+                    raise TypeError("Argument `{{parameter.name}}` is not of type `{{parameter.type}}` (%s)" % 
+                                    str(type({{parameter.name}})))
+            self.{{parameter.name}} = {{parameter.name}}
+
+        {% endif %}
+        {% endfor %}
+        path = "{{endpoint.path}}"
+        {% for parameter in endpoint.parameters %}
+        {% if parameter.paramType == "path" %}
+        path = path.replace("{" + "{{parameter.name}}" + "}", str({{parameter.name}}))
+        {% endif %}
+        {% endfor %}
+
+        {% set body = endpoint.parameters | body %}
+        {% if body | length > 1 %}
+        raise RuntimeError("Too much body argument")
+        {% endif %}
+        ret = self.do_request("{{endpoint.method}}",
+                              path,
+                              {{endpoint.parameters | query_args}},
+                              {{body[0] or {} }},
+                              {{endpoint.responses | errors_dict}})
+
+        if ret is None:
+            return None
+
+        {% if endpoint.return_.type == "void" %}
+        return ret
+        {% elif endpoint.return_.type == "list" %}
+        if not isinstance(ret, list):
+            raise TypeError("Returned json is not a list (%s)" % (type(ret)))
+        return [{{endpoint.return_.items}}(**r) for r in ret]
+        {% else %}
+        return {{endpoint.return_.type}}(**ret)
+        {% endif %}
+
+    {{endpoint | path_to_function}} = {{endpoint.name}}
+    {% endfor %}
