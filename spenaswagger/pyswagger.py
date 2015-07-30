@@ -88,6 +88,9 @@ def gen_py(api_categories):
     def is_model(type, models):
         return type in [m.name for m in models]
 
+    def needs_enum(models):
+        return any([field.enum is not None for model in models for field in model.fields])
+
     env.filters['as_args'] = as_args
     env.filters['query_args'] = query_args
     env.filters['body'] = body
@@ -95,6 +98,7 @@ def gen_py(api_categories):
     env.filters['as_calling_args'] = as_calling_args
     env.filters['path_to_function'] = path_to_function
     env.filters['is_model'] = is_model
+    env.filters['needs_enum'] = needs_enum
 
     template = env.get_template("base.py.jinja")
     with open("generated/base.py", "w") as base_file:

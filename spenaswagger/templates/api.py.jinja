@@ -1,9 +1,27 @@
 from .base import API, Model
 import numbers
+{% if api.models | needs_enum %}
+from enum import Enum, unique
+{% endif %}
 {% for model in api.models %}
 
 
 class {{model.name}}(Model):
+    {% for field in model.fields %}
+    {% if field.enum %}
+
+    @unique
+    class {{field.name | capitalize}}(Enum):
+        {% for value in field.enum %}
+        {{value}} = "{{value}}"
+        {% endfor %}
+
+        def asdict(self):
+            return self.name
+
+    {% endif %}
+    {% endfor %}
+
     def __init__({{model.fields | as_args}}, **kwargs):
         {% for field in model.fields %}
         {% if field.required %}
@@ -29,9 +47,15 @@ class {{model.name}}(Model):
         {# Numbers are convertible #}
         if isinstance({{field.name}}, numbers.Number):
             {{field.name}} = {{field.type}}({{field.name}})
+        {# Handle enums #}
+        {% if field.enum %}
+        if isinstance({{field.name}}, str):
+            {{field.name}} = {{model.name}}.{{field.name | capitalize}}[{{field.name}}]
+        {% endif %}
         {# Now check the type #}
-        if not (isinstance({{field.name}}, {{field.type}})) and {{field.name}} is not None:
-            raise TypeError("Argument `{{field.name}}` is not of type `{{field.type}}` (%s)" % str(type({{field.name}})))
+        {% set check_type = model.name + "." + (field.name | capitalize) if field.enum else field.type %}
+        if not (isinstance({{field.name}}, {{check_type}})) and {{field.name}} is not None:
+            raise TypeError("Argument `{{field.name}}` is not of type `{{check_type}}` (%s)" % str(type({{field.name}})))
         self.{{field.name}} = {{field.name}}
         {% endfor %}
         self._extra_ = kwargs

@@ -20,7 +20,7 @@ def swagit(user, password, url):
         for name, model in cat_api.get("models", {}).items():
             fields = []
             for pname, field in model["properties"].items():
-                fields.append(Field(pname, field["type"], field["required"], field.get("items", {}).get("type")))
+                fields.append(Field(pname, field["type"], field["required"], field.get("items", {}).get("type"), field.get("enum")))
             models.append(Model(name, fields))
 
         models = sorted(models, key=lambda m: m.name)

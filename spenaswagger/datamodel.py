@@ -7,7 +7,7 @@ Endpoint = namedtuple("Endpoint", ["name", "path", "description", "method", "par
 Parameter = namedtuple("Parameter", ["default", "description", "name", "paramType", "type", "required", "multiple", "items", "enum"])
 Response = namedtuple("Response", ["code", "message"])
 Return = namedtuple("Return", ["type", "items"])
-Field = namedtuple("Field", ["name", "type", "required", "items"])
+Field = namedtuple("Field", ["name", "type", "required", "items", "enum"])
 Model = namedtuple("Model", ["name", "fields"])
 
 
