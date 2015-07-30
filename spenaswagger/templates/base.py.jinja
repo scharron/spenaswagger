@@ -2,6 +2,11 @@ import requests
 from urllib.parse import urljoin
 import json
 from textwrap import indent
+import logging
+
+
+logging.basicConfig(level=logging.WARNING, format='[%(levelname)s][%(name)s][%(asctime)s] %(message)s')
+
 
 
 class API:
@@ -10,19 +15,27 @@ class API:
             self.code = code
             self.message = message
 
-    def __init__(self, base_url, user, password):
+    def __init__(self, base_url, user, password, debug=False):
         self.session = requests.Session()
         self.session.auth = (user, password)
         self.base_url = base_url + ("/" if base_url[-1] != "/" else "")
+        self.debug = debug
+        self.logger = logging.getLogger("API")
+        self.logger.setLevel(logging.INFO if debug else logging.WARNING )
 
     def do_request(self, method, path, query_args, body, error_codes):
         path = urljoin(self.base_url, path[1:])
 
         if hasattr(body, "asdict"):
             body = body.asdict()
+        if isinstance(body, list):
+            body = [e.asdict() if hasattr(e, "asdict") else e for e in body]
         if body is not None:
             body = json.dumps(body)
 
+        self.logger.info("Doing request [%s %s]", method, path)
+        self.logger.info("Query string: %s", query_args)
+        self.logger.info("Body: %s", body)
         ret = self.session.request(method, path, params=query_args, data=body, headers={"Content-type": "application/json"})
 
         assert ret.status_code in error_codes, "Status code %i not expected %s\n%s" % (ret.status_code, list(error_codes.keys()), ret.content)
@@ -36,7 +49,10 @@ class API:
 
 class Model:
     def asdict(self):
-        return {name: value for name, value in self.__dict__.items() if value is not None}
+        return {name: (value.asdict() if hasattr(value, "asdict") else value) 
+                for name, value in self.__dict__.items() 
+                if value is not None and name != "_extra_"
+               }
 
     def __str__(self):
         return "[Model " + type(self).__name__ + "\n" + ("\n".join([str(k) + " = " + indent(str(v), '    ').strip() for k, v in self.__dict__.items()])) + "\n]"

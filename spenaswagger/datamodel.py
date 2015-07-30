@@ -4,7 +4,7 @@ from collections import namedtuple
 # Swagger Data Model
 Category = namedtuple("Category", ["name", "endpoints", "models"])
 Endpoint = namedtuple("Endpoint", ["name", "path", "description", "method", "parameters", "responses", "return_"])
-Parameter = namedtuple("Parameter", ["default", "description", "name", "paramType", "type", "required", "multiple", "enum"])
+Parameter = namedtuple("Parameter", ["default", "description", "name", "paramType", "type", "required", "multiple", "items", "enum"])
 Response = namedtuple("Response", ["code", "message"])
 Return = namedtuple("Return", ["type", "items"])
 Field = namedtuple("Field", ["name", "type", "required", "items"])

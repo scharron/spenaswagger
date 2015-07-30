@@ -38,7 +38,7 @@ class PyTransformer(Transformer):
         return {"type": map_type(field.type)}
 
     def transform_parameter(self, parameter):
-        return {"type": map_type(parameter.type)}
+        return {"type": map_type(parameter.type), "items": map_type(parameter.items or "")}
 
     def transform_parameters(self, params):
         return list(sorted(params, key=lambda p: 0 if p.required else 1))

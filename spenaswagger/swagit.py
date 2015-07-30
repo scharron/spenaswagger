@@ -12,6 +12,8 @@ def swagit(user, password, url):
 
     api_categories = []
     for cat in categories["apis"]:
+        if cat["path"] != "/default/company-list-api":
+            continue
         print(cat["path"])
 
         cat_api = session.get(url + cat["path"]).json()
@@ -33,8 +35,14 @@ def swagit(user, password, url):
                 returns = Return(operation["type"], operation.get("items", {}).get("type"))
                 parameters = {}
                 for parameter in operation["parameters"]:
-                    if parameter["paramType"] == "body" and parameter["type"] not in available_models:
-                        continue
+                    item_type = parameter["type"]
+                    if item_type == "array":
+                        item_type = parameter.get("items", {}).get("type")
+
+                    if parameter["paramType"] == "body":
+                        if item_type not in available_models:
+                            continue
+
                     parameters[parameter["name"]] = Parameter(parameter["defaultValue"],
                                                               parameter["description"],
                                                               parameter["name"],
@@ -42,6 +50,7 @@ def swagit(user, password, url):
                                                               parameter["type"],
                                                               parameter["required"],
                                                               parameter["allowMultiple"],
+                                                              parameter.get("items", {}).get("type"),
                                                               parameter.get("enum"))
                 parameters = list(parameters.values())
 

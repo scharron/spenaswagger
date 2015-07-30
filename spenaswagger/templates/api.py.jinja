@@ -51,10 +51,11 @@ class {{api.name}}(API):
 
         {% for p in endpoint.parameters %}
         :param {{p.name}}: {{p.description}}
-        :type {{p.name}}: {{p.type}}
+        {% set ptype = "list(" + p.items + ")" if p.type == "list" else p.type %}
+        :type {{p.name}}: {{ptype}}
         {% endfor %}
         {% set rtype = "Nothing" if endpoint.return_.type == "void" else endpoint.return_.type %}
-        {% set rtype = "list(" + endpoint.return_.items + ")" if rtype == "array" else rtype %}
+        {% set rtype = "list(" + endpoint.return_.items + ")" if rtype == "list" else rtype %}
         :rtype: {{rtype}}
         """
 
