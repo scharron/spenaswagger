@@ -12,8 +12,6 @@ def swagit(user, password, url):
 
     api_categories = []
     for cat in categories["apis"]:
-        if cat["path"] != "/default/company-list-api":
-            continue
         print(cat["path"])
 
         cat_api = session.get(url + cat["path"]).json()
