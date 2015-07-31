@@ -4,7 +4,8 @@ import os
 
 
 def remove_generics(t):
-    t = '_'.join(t.split("«")).replace("»", "")
+    t = "_".join(t.split("«")).replace("»", "")
+    t = t.replace(",", "_")
     return t
 
 
