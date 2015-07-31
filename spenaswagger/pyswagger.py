@@ -60,19 +60,19 @@ def gen_py(api_categories):
     env = Environment(loader=PackageLoader("spenaswagger", "templates"), trim_blocks=True, lstrip_blocks=True)
 
     def to_value(arg):
-        if type(arg) != str:
+        if type(arg) != str and arg is not None:
             return arg
 
         if arg == "false":
             return "False"
         elif arg == "true":
             return "True"
-        return '"' + arg + '"'
+        return '"%s"' % arg
 
     def as_args(args):
         args = list(sorted(args, key=lambda a: a.name))
         req_args = [a.name for a in args if a.required]
-        def_args = [a.name + "=" + (to_value(getattr(a, "default", None)) or "None") for a in args if not a.required]
+        def_args = [a.name + "=" + to_value(getattr(a, "default", None)) for a in args if not a.required]
         return ', '.join(["self"] + req_args + def_args)
 
     def query_args(parameters):
