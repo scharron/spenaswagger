@@ -8,6 +8,12 @@ import logging
 logging.basicConfig(level=logging.WARNING, format='[%(levelname)s][%(name)s][%(asctime)s] %(message)s')
 
 
+class SwagJsonEncoder(json.JSONEncoder):
+    def default(self, o):
+        if hasattr(o, "asdict"):
+            return o.asdict()
+        return super().default(o)
+
 
 class API:
     class Error(Exception):
@@ -21,17 +27,13 @@ class API:
         self.base_url = base_url + ("/" if base_url[-1] != "/" else "")
         self.debug = debug
         self.logger = logging.getLogger("API")
-        self.logger.setLevel(logging.INFO if debug else logging.WARNING )
+        self.logger.setLevel(logging.INFO if debug else logging.WARNING)
 
     def do_request(self, method, path, query_args, body, error_codes):
         path = urljoin(self.base_url, path[1:])
 
-        if hasattr(body, "asdict"):
-            body = body.asdict()
-        if isinstance(body, list):
-            body = [e.asdict() if hasattr(e, "asdict") else e for e in body]
         if body is not None:
-            body = json.dumps(body)
+            body = SwagJsonEncoder().encode(body)
 
         self.logger.info("Doing request [%s %s]", method, path)
         self.logger.info("Query string: %s", query_args)

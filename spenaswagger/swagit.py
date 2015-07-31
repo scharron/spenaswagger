@@ -2,6 +2,19 @@ import requests
 from .datamodel import Category, Endpoint, Parameter, Response, Return, Field, Model
 
 
+def find_comma(s):
+    # Find the first , (not between other <>)
+    counter = 0
+    for pos, c in enumerate(s):
+        if c == '«':
+            counter += 1
+        if c == '»':
+            counter -= 1
+        if c == ',' and counter == 0:
+            return pos
+    return -1
+
+
 def swagit(user, password, url):
     session = requests.session()
     session.auth = (user, password)
@@ -20,6 +33,17 @@ def swagit(user, password, url):
         for name, model in cat_api.get("models", {}).items():
             fields = []
             for pname, field in model["properties"].items():
+                if field["type"] == "array":
+                    item_type = field.get("items", {}).get("type", "")
+                    if item_type.startswith("Entry"):
+                        field["type"] = "dict"
+                        # Remove Entry<.*> but keep what's between <>
+                        item_type = item_type.replace("Entry«", "")[:-1]
+                        comma = find_comma(item_type)
+                        assert comma >= 0
+                        key_type = item_type[:comma]
+                        val_type = item_type[comma + 1:]
+                        field["items"] = {"type": (key_type, val_type)}
                 fields.append(Field(pname, field["type"], field["required"], field.get("items", {}).get("type"), field.get("enum")))
             models.append(Model(name, fields))
 
@@ -37,6 +61,7 @@ def swagit(user, password, url):
                     if item_type == "array":
                         item_type = parameter.get("items", {}).get("type")
 
+                    # Swagger add false bodies sometimes...
                     if parameter["paramType"] == "body":
                         if item_type not in available_models:
                             continue

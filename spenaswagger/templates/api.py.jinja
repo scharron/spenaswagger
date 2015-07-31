@@ -37,7 +37,12 @@ class {{model.name}}(Model):
         {# convert list to a list of Model object #}
         {% if field.type == "list" and field.items | is_model(api.models) %}
         if isinstance({{field.name}}, list):
-            {{field.name}} = [{{field.items}}(**e) for e in {{field.name}}]
+            {{field.name}} = [e if isinstance(e, {{field.items}}) else {{field.items}}(**e) for e in {{field.name}}]
+        {% endif %}
+        {# convert dict to a dict with keys being Model objects #}
+        {% if field.type == "dict" and field.items[1] | is_model(api.models) %}
+        if isinstance({{field.name}}, dict):
+        {{field.name}} = {k, v if isinstance(v, {{field.items}}) else {{field.items}}(**v) for v in {{field.name}}}
         {% endif %}
         {# Bug: dates are declared as strings, but given as int in the json #}
         {% if field.type == "str" %}
@@ -45,14 +50,17 @@ class {{model.name}}(Model):
             {{field.name}} = str({{field.name}})
         {% endif %}
         {# Numbers are convertible #}
+        {% if field.type in ("int", "float", "double") %}
         if isinstance({{field.name}}, numbers.Number):
             {{field.name}} = {{field.type}}({{field.name}})
+        {% endif %}
         {# Handle enums #}
         {% if field.enum %}
         if isinstance({{field.name}}, str):
             {{field.name}} = {{model.name}}.{{field.name | capitalize}}[{{field.name}}]
         {% endif %}
         {# Now check the type #}
+        {# TODO: we should also check lists and dicts #}
         {% set check_type = model.name + "." + (field.name | capitalize) if field.enum else field.type %}
         if not (isinstance({{field.name}}, {{check_type}})) and {{field.name}} is not None:
             raise TypeError("Argument `{{field.name}}` is not of type `{{check_type}}` (%s)" % str(type({{field.name}})))

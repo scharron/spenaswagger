@@ -4,6 +4,8 @@ import os
 
 
 def remove_generics(t):
+    if type(t) is tuple:
+        return tuple([remove_generics(e) for e in t])
     t = "_".join(t.split("«")).replace("»", "")
     t = t.replace(",", "_")
     return t
@@ -17,6 +19,7 @@ def map_type(t):
         "boolean": "bool",
         "array": "list",
         "number": "float",
+        "dict": "dict",
     }
     t = remove_generics(t)
     return type_mapping.get(t, t)
@@ -36,7 +39,7 @@ class PyTransformer(Transformer):
         return list(sorted(fields, key=lambda f: 0 if f.required else 1))
 
     def transform_field(self, field):
-        return {"type": map_type(field.type)}
+        return {"type": map_type(field.type), "items": map_type(field.items or "")}
 
     def transform_parameter(self, parameter):
         return {"type": map_type(parameter.type), "items": map_type(parameter.items or "")}
