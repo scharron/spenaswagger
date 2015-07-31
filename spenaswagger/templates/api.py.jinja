@@ -42,7 +42,7 @@ class {{model.name}}(Model):
         {# convert dict to a dict with keys being Model objects #}
         {% if field.type == "dict" and field.items[1] | is_model(api.models) %}
         if isinstance({{field.name}}, dict):
-            {{field.name}} = {k: v if isinstance(v, {{field.items}}) else {{field.items}}(**v) for k, v in {{field.name}}.items()}
+            {{field.name}} = {k: v if isinstance(v, {{field.items[1]}}) else {{field.items[1]}}(**v) for k, v in {{field.name}}.items()}
         {% endif %}
         {# Bug: dates are declared as strings, but given as int in the json #}
         {% if field.type == "str" %}
