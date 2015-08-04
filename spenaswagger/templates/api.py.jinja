@@ -3,16 +3,16 @@ import numbers
 {% if api.models | needs_enum %}
 from enum import Enum, unique
 {% endif %}
-{% for model in api.models %}
+{% for model in api.models | sort %}
 
 
 class {{model.name}}(Model):
-    {% for field in model.fields %}
+    {% for field in model.fields | sort %}
     {% if field.enum %}
 
     @unique
     class {{field.name | capitalize}}(Enum):
-        {% for value in field.enum %}
+        {% for value in field.enum | sort %}
         {{value}} = "{{value}}"
         {% endfor %}
 
@@ -23,7 +23,7 @@ class {{model.name}}(Model):
     {% endfor %}
 
     def __init__({{model.fields | as_args}}, **kwargs):
-        {% for field in model.fields %}
+        {% for field in model.fields | sort %}
         {% if field.required %}
         if {{field.name}} is None:
             raise TypeError("Argument `{{field.name}}` is required but its value is None")
@@ -73,7 +73,7 @@ class {{model.name}}(Model):
 class {{api.name}}(API):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    {% for endpoint in api.endpoints %}
+    {% for endpoint in api.endpoints | sort %}
 
     def {{endpoint.name}}({{endpoint.parameters | as_args}}):
         """
@@ -81,7 +81,7 @@ class {{api.name}}(API):
 
         ({{endpoint.method}} {{endpoint.path}})
 
-        {% for p in endpoint.parameters %}
+        {% for p in endpoint.parameters | sort %}
         :param {{p.name}}: {{p.description}}
         {% set ptype = "list(" + p.items + ")" if p.type == "list" else p.type %}
         :type {{p.name}}: {{ptype}}
@@ -105,7 +105,7 @@ class {{api.name}}(API):
         {% endif %}
         {% endfor %}
         path = "{{endpoint.path}}"
-        {% for parameter in endpoint.parameters %}
+        {% for parameter in endpoint.parameters | sort %}
         {% if parameter.paramType == "path" %}
         path = path.replace("{" + "{{parameter.name}}" + "}", str({{parameter.name}}))
         {% endif %}
