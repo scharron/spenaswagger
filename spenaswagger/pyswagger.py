@@ -79,7 +79,7 @@ def gen_py(api_categories):
         return ', '.join(["self"] + req_args + def_args)
 
     def query_args(parameters):
-        args = ['"' + p.name + '": ' + p.name for p in parameters if p.paramType == "query"]
+        args = ['"' + p.name + '": ' + p.name for p in sorted(parameters, key=lambda p: p.name) if p.paramType == "query"]
         args = ', '.join(args)
         return "{" + args + "}"
 

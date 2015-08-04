@@ -48,7 +48,7 @@ def swagit(user, password, url):
             models.append(Model(name, fields))
 
         models = sorted(models, key=lambda m: m.name)
-        available_models = set([m.name for m in models])
+        # available_models = set([m.name for m in models])
 
         endpoints = []
         for endpoint in cat_api["apis"]:
@@ -63,7 +63,7 @@ def swagit(user, password, url):
 
                     # Swagger add false bodies sometimes...
                     if parameter["paramType"] == "body":
-                        if item_type not in available_models:
+                        if item_type == "Principal":
                             continue
 
                     parameters[parameter["name"]] = Parameter(parameter["defaultValue"],
