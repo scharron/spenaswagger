@@ -20,6 +20,7 @@ def map_type(t):
         "array": "list",
         "number": "float",
         "dict": "dict",
+        "URL": "str",
     }
     t = remove_generics(t)
     return type_mapping.get(t, t)
