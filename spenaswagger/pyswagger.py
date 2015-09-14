@@ -66,7 +66,8 @@ def gen_py(api_categories):
     def to_value(arg):
         if type(arg) != str and arg is not None:
             return arg
-
+        if arg is None:
+            return "None"
         if arg == "false":
             return "False"
         elif arg == "true":
