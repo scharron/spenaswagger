@@ -23,6 +23,8 @@ class {{model.name}}(Model):
     {% endfor %}
 
     def __init__({{model.fields | as_args}}, **kwargs):
+        super().__init__()
+
         {% for field in model.fields | sort %}
         {% set name = field.name | safe_name %}
         {% if name != field.name %}

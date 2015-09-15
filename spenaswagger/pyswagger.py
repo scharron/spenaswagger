@@ -1,6 +1,7 @@
 from .datamodel import Transformer
 from jinja2 import PackageLoader, Environment
 import os
+import re
 
 
 def remove_generics(t):
@@ -105,9 +106,9 @@ def gen_py(api_categories):
     def path_to_function(endpoint):
         path = endpoint.path.split("/")
         path = [p for p in path if len(p) > 0]
-        path = [p for p in path if p[0] != "{"] + ["by_" + p[1:-1] for p in path if p[0] == "{"]
+        path = [re.sub("{(.*?)}", "by_\\1", p) for p in path]
         path = [endpoint.method.lower()] + path
-        return "_".join(path)
+        return re.sub("\\W", "_", "_".join(path))
 
     def is_model(type, models):
         return type in [m.name for m in models]
