@@ -24,47 +24,51 @@ class {{model.name}}(Model):
 
     def __init__({{model.fields | as_args}}, **kwargs):
         {% for field in model.fields | sort %}
+        {% set name = field.name | safe_name %}
+        {% if name != field.name %}
+        self.__pykeywords__["{{field.name}}"] = "{{name}}"
+        {% endif %}
         {% if field.required %}
-        if {{field.name}} is None:
-            raise TypeError("Argument `{{field.name}}` is required but its value is None")
+        if {{name}} is None:
+            raise TypeError("Argument `{{name}}` is required but its value is None")
         {% endif %}
         {# First try to convert to the given type #}
         {# convert dict to a Model object #}
         {% if field.type | is_model(api.models) %}
-        if isinstance({{field.name}}, dict):
-            {{field.name}} = {{field.type}}(**{{field.name}})
+        if isinstance({{name}}, dict):
+            {{name}} = {{field.type}}(**{{name}})
         {% endif %}
         {# convert list to a list of Model object #}
         {% if field.type == "list" and field.items | is_model(api.models) %}
-        if isinstance({{field.name}}, list):
-            {{field.name}} = [e if isinstance(e, {{field.items}}) else {{field.items}}(**e) for e in {{field.name}}]
+        if isinstance({{name}}, list):
+            {{name}} = [e if isinstance(e, {{field.items}}) else {{field.items}}(**e) for e in {{name}}]
         {% endif %}
         {# convert dict to a dict with keys being Model objects #}
         {% if field.type == "dict" and field.items[1] | is_model(api.models) %}
-        if isinstance({{field.name}}, dict):
-            {{field.name}} = {k: v if isinstance(v, {{field.items[1]}}) else {{field.items[1]}}(**v) for k, v in {{field.name}}.items()}
+        if isinstance({{name}}, dict):
+            {{name}} = {k: v if isinstance(v, {{field.items[1]}}) else {{field.items[1]}}(**v) for k, v in {{name}}.items()}
         {% endif %}
         {# Bug: dates are declared as strings, but given as int in the json #}
         {% if field.type == "str" %}
-        if type({{field.name}}) is int:
-            {{field.name}} = str({{field.name}})
+        if type({{name}}) is int:
+            {{name}} = str({{name}})
         {% endif %}
         {# Numbers are convertible #}
         {% if field.type in ("int", "float", "double") %}
-        if isinstance({{field.name}}, numbers.Number):
-            {{field.name}} = {{field.type}}({{field.name}})
+        if isinstance({{name}}, numbers.Number):
+            {{name}} = {{field.type}}({{name}})
         {% endif %}
         {# Handle enums #}
         {% if field.enum %}
-        if isinstance({{field.name}}, str):
-            {{field.name}} = {{model.name}}.{{field.name | capitalize}}[{{field.name}}]
+        if isinstance({{name}}, str):
+            {{name}} = {{model.name}}.{{name | capitalize}}[{{name}}]
         {% endif %}
         {# Now check the type #}
         {# TODO: we should also check lists and dicts #}
-        {% set check_type = model.name + "." + (field.name | capitalize) if field.enum else field.type %}
-        if not (isinstance({{field.name}}, {{check_type}})) and {{field.name}} is not None:
-            raise TypeError("Argument `{{field.name}}` is not of type `{{check_type}}` (%s)" % str(type({{field.name}})))
-        self.{{field.name}} = {{field.name}}
+        {% set check_type = model.name + "." + (name | capitalize) if field.enum else field.type %}
+        if not (isinstance({{name}}, {{check_type}})) and {{name}} is not None:
+            raise TypeError("Argument `{{name}}` is not of type `{{check_type}}` (%s)" % str(type({{name}})))
+        self.{{name}} = {{name}}
         {% endfor %}
         self._extra_ = kwargs
 {% endfor %}

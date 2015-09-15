@@ -63,6 +63,14 @@ def gen_py(api_categories):
 
     env = Environment(loader=PackageLoader("spenaswagger", "templates"), trim_blocks=True, lstrip_blocks=True)
 
+    def is_pykeyword(arg):
+        return arg in {"False", "class", "finally", "is", "return", "None", "continue", "for", "lambda", "try", "True",
+                       "def", "from", "nonlocal", "while", "and", "del", "global", "not", "with", "as", "elif", "if",
+                       "or", "yield", "assert", "else", "import", "pass", "break", "except", "in", "raise"}
+
+    def safe_name(name):
+        return name + ("_" if is_pykeyword(name) else "")
+
     def to_value(arg):
         if type(arg) != str and arg is not None:
             return arg
@@ -76,8 +84,8 @@ def gen_py(api_categories):
 
     def as_args(args):
         args = list(sorted(args, key=lambda a: a.name))
-        req_args = [a.name for a in args if a.required]
-        def_args = [a.name + "=" + to_value(getattr(a, "default", None)) for a in args if not a.required]
+        req_args = [safe_name(a.name) for a in args if a.required]
+        def_args = [safe_name(a.name) + "=" + to_value(getattr(a, "default", None)) for a in args if not a.required]
         return ', '.join(["self"] + req_args + def_args)
 
     def query_args(parameters):
@@ -115,6 +123,7 @@ def gen_py(api_categories):
     env.filters['path_to_function'] = path_to_function
     env.filters['is_model'] = is_model
     env.filters['needs_enum'] = needs_enum
+    env.filters['safe_name'] = safe_name
 
     template = env.get_template("base.py.jinja")
     with open("generated/base.py", "w") as base_file:

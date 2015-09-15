@@ -50,8 +50,11 @@ class API:
 
 
 class Model:
+    def __init__(self):
+        self.__pykeywords__ = {}
+
     def asdict(self):
-        return {name: (value.asdict() if hasattr(value, "asdict") else value) 
+        return {self.__pykeywords__.get(name, name): (value.asdict() if hasattr(value, "asdict") else value) 
                 for name, value in self.__dict__.items() 
                 if value is not None and name != "_extra_"
                }
