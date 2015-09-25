@@ -45,10 +45,10 @@ class API:
             if len(ret.content) == 0:
                 self.logger.info("Result [%i] is empty" % ret.status_code)
                 return None
-            self.logger.info("Result [%i]: %s", (ret.status_code, ret.content))
+            self.logger.info("Result [%i]: %s", ret.status_code, ret.content)
             return ret.json()
         else:
-            self.logger.info("Result [%i]: %s", (ret.status_code, ret.content))
+            self.logger.info("Result [%i]: %s", ret.status_code, ret.content)
             raise API.Error(ret.status_code, error_codes[ret.status_code])
 
 
@@ -59,10 +59,11 @@ class Model:
     def asdict(self):
         return {self.__pykeywords__.get(name, name): (value.asdict() if hasattr(value, "asdict") else value) 
                 for name, value in self.__dict__.items() 
-                if value is not None and name != "_extra_"
+                if value is not None and name != "_extra_" and name != "__pykeywords__"
                }
 
     def __str__(self):
-        return "[Model " + type(self).__name__ + "\n" + ("\n".join([str(k) + " = " + indent(str(v), '    ').strip() for k, v in self.__dict__.items()])) + "\n]"
+        return ("[Model " + type(self).__name__ + "\n" + 
+                ("\n".join([str(k) + " = " + indent(str(v), '    ').strip() for k, v in self.__dict__.items() if k != "__pykeywords__"])) + "\n]")
 
     __repr__ = __str__

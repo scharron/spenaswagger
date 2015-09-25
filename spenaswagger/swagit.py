@@ -32,7 +32,16 @@ def swagit(user, password, url):
         models = []
         for name, model in cat_api.get("models", {}).items():
             fields = []
+            # Collections are in fact lists of objects
+            # No need to create an empty shell
+            if name.startswith("Collection") or name.startswith("Locale"):
+                continue
             for pname, field in model["properties"].items():
+                # Transform collections into lists
+                if field["type"].startswith("Collection"):
+                    field["items"] = {"type": field["type"].replace("Collection«", "")[:-1]}
+                    field["type"] = "array"
+
                 if field["type"] == "array":
                     item_type = field.get("items", {}).get("type", "")
                     if item_type.startswith("Entry"):
@@ -44,11 +53,14 @@ def swagit(user, password, url):
                         key_type = item_type[:comma]
                         val_type = item_type[comma + 1:]
                         field["items"] = {"type": (key_type, val_type)}
+                if field["type"] == "Locale":
+                    field["type"] = "str"
+                if field.get("items", {}).get("type") == "Locale":
+                    field["items"]["type"] = "str"
                 fields.append(Field(pname, field["type"], field["required"], field.get("items", {}).get("type"), field.get("enum")))
             models.append(Model(name, fields))
 
         models = sorted(models, key=lambda m: m.name)
-        # available_models = set([m.name for m in models])
 
         endpoints = []
         for endpoint in cat_api["apis"]:
