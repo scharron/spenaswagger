@@ -132,6 +132,8 @@ class {{api.name}}(API):
 
         {% if endpoint.return_.type == "void" %}
         return ret
+        {% elif endpoint.return_.type in ["float", "double", "str", "int"] %}
+        return {{endpoint.return_.type}}(ret)
         {% elif endpoint.return_.type == "list" %}
         if not isinstance(ret, list):
             raise TypeError("Returned json is not a list (%s)" % (type(ret)))
