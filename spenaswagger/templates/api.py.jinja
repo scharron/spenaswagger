@@ -3,6 +3,9 @@ import numbers
 {% if api.models | needs_enum %}
 from enum import Enum, unique
 {% endif %}
+
+
+KEYWORDS = {{keywords}}
 {% for model in api.models | sort %}
 
 
@@ -24,9 +27,14 @@ class {{model.name}}(Model):
 
     def __init__({{model.fields | as_args}}, **kwargs):
         super().__init__()
+        {# Escape the keywords and builtin functions #}
+        kwargs = {k if k not in KEYWORDS else k + "_": v 
+                  for k, v in kwargs.items()
+                 }
 
         {% for field in model.fields | sort %}
         {% set name = field.name | safe_name %}
+        {{name}} = kwargs.pop("{{name}}", {{name}})
         {% if name != field.name %}
         self.__pykeywords__["{{field.name}}"] = "{{name}}"
         {% endif %}

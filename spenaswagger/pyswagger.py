@@ -4,6 +4,22 @@ import os
 import re
 
 
+KEYWORDS = {
+    # Keywords
+    "False", "class", "finally", "is", "return", "None", "continue", "for", "lambda", "try", "True",
+    "def", "from", "nonlocal", "while", "and", "del", "global", "not", "with", "as", "elif", "if",
+    "or", "yield", "assert", "else", "import", "pass", "break", "except", "in", "raise",
+    # Builtin functions
+    "abs", "dict", "help", "min", "setattr", "all", "dir", "hex", "next", "slice",
+    "any", "divmod", "id", "object", "sorted", "ascii", "enumerate", "input", "oct", "staticmethod",
+    "bin", "eval", "int", "open", "str", "bool", "exec", "isinstance", "ord", "sum",
+    "bytearray", "filter", "issubclass", "pow", "super", "bytes", "float", "iter", "print", "tuple",
+    "callable", "format", "len", "property", "type", "chr", "frozenset", "list", "range", "vars",
+    "classmethod", "getattr", "locals", "repr", "zip", "compile", "globals", "map", "reversed", "__import__",
+    "complex", "hasattr", "max", "round", "delattr", "hash", "memoryview", "set",
+}
+
+
 def remove_generics(t):
     if type(t) is tuple:
         return tuple([remove_generics(e) for e in t])
@@ -65,22 +81,11 @@ def gen_py(api_categories):
     env = Environment(loader=PackageLoader("spenaswagger", "templates"), trim_blocks=True, lstrip_blocks=True)
 
     def is_pykeyword(arg):
-        return arg in {
-            # Keywords
-            "False", "class", "finally", "is", "return", "None", "continue", "for", "lambda", "try", "True",
-            "def", "from", "nonlocal", "while", "and", "del", "global", "not", "with", "as", "elif", "if",
-            "or", "yield", "assert", "else", "import", "pass", "break", "except", "in", "raise",
-            # Builtin functions
-            "abs", "dict", "help", "min", "setattr", "all", "dir", "hex", "next", "slice",
-            "any", "divmod", "id", "object", "sorted", "ascii", "enumerate", "input", "oct", "staticmethod",
-            "bin", "eval", "int", "open", "str", "bool", "exec", "isinstance", "ord", "sum",
-            "bytearray", "filter", "issubclass", "pow", "super", "bytes", "float", "iter", "print", "tuple",
-            "callable", "format", "len", "property", "type", "chr", "frozenset", "list", "range", "vars",
-            "classmethod", "getattr", "locals", "repr", "zip", "compile", "globals", "map", "reversed", "__import__",
-            "complex", "hasattr", "max", "round", "delattr", "hash", "memoryview", "set",
-        }
+        return arg in KEYWORDS
 
     def safe_name(name):
+        if isinstance(name, list):
+            return [safe_name(e) for e in name]
         return name + ("_" if is_pykeyword(name) else "")
 
     def to_value(arg):
@@ -144,4 +149,4 @@ def gen_py(api_categories):
     template = env.get_template("api.py.jinja")
     for api in api_categories:
         with open("generated/" + api.name + ".py", "w") as api_file:
-            api_file.write(template.render(api=api))
+            api_file.write(template.render(api=api, keywords=KEYWORDS))
