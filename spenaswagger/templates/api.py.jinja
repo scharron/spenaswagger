@@ -16,7 +16,7 @@ class {{model.name}}(Model):
     @unique
     class {{field.name | safe_name | capitalize}}(Enum):
         {% for value in field.enum | sort %}
-        {{value}} = "{{value}}"
+        {{value | upper}} = "{{value}}"
         {% endfor %}
 
         def asdict(self):
@@ -71,7 +71,7 @@ class {{model.name}}(Model):
         {# Handle enums #}
         {% if field.enum %}
         if isinstance({{name}}, str):
-            {{name}} = {{model.name}}.{{name | capitalize}}[{{name}}]
+            {{name}} = {{model.name}}.{{name | safe_name | capitalize}}[{{name}}.upper()]
         {% endif %}
         {# Now check the type #}
         {# TODO: we should also check lists and dicts #}
@@ -121,7 +121,7 @@ class {{api.name}}(API):
         path = "{{endpoint.path}}"
         {% for parameter in endpoint.parameters | sort %}
         {% if parameter.paramType == "path" %}
-        path = path.replace("{" + "{{parameter.name}}" + "}", str({{parameter.name}}))
+        path = path.replace("{" + "{{parameter.name}}" + "}", str({{parameter.name | safe_name}}))
         {% endif %}
         {% endfor %}
 
