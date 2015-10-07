@@ -5,7 +5,7 @@ from enum import Enum, unique
 {% endif %}
 
 
-KEYWORDS = {{keywords}}
+KEYWORDS = {{keywords | sort}}
 {% for model in api.models | sort %}
 
 
@@ -36,7 +36,7 @@ class {{model.name}}(Model):
         {% set name = field.name | safe_name %}
         {{name}} = kwargs.pop("{{name}}", {{name}})
         {% if name != field.name %}
-        self.__pykeywords__["{{field.name}}"] = "{{name}}"
+        self.__pykeywords__["{{name}}"] = "{{field.name}}"
         {% endif %}
         {% if field.required %}
         if {{name}} is None:
