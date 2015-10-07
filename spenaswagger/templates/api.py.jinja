@@ -11,7 +11,7 @@ class {{model.name}}(Model):
     {% if field.enum %}
 
     @unique
-    class {{field.name | capitalize}}(Enum):
+    class {{field.name | safe_name | capitalize}}(Enum):
         {% for value in field.enum | sort %}
         {{value}} = "{{value}}"
         {% endfor %}

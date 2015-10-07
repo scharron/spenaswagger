@@ -65,9 +65,20 @@ def gen_py(api_categories):
     env = Environment(loader=PackageLoader("spenaswagger", "templates"), trim_blocks=True, lstrip_blocks=True)
 
     def is_pykeyword(arg):
-        return arg in {"False", "class", "finally", "is", "return", "None", "continue", "for", "lambda", "try", "True",
-                       "def", "from", "nonlocal", "while", "and", "del", "global", "not", "with", "as", "elif", "if",
-                       "or", "yield", "assert", "else", "import", "pass", "break", "except", "in", "raise"}
+        return arg in {
+            # Keywords
+            "False", "class", "finally", "is", "return", "None", "continue", "for", "lambda", "try", "True",
+            "def", "from", "nonlocal", "while", "and", "del", "global", "not", "with", "as", "elif", "if",
+            "or", "yield", "assert", "else", "import", "pass", "break", "except", "in", "raise",
+            # Builtin functions
+            "abs", "dict", "help", "min", "setattr", "all", "dir", "hex", "next", "slice",
+            "any", "divmod", "id", "object", "sorted", "ascii", "enumerate", "input", "oct", "staticmethod",
+            "bin", "eval", "int", "open", "str", "bool", "exec", "isinstance", "ord", "sum",
+            "bytearray", "filter", "issubclass", "pow", "super", "bytes", "float", "iter", "print", "tuple",
+            "callable", "format", "len", "property", "type", "chr", "frozenset", "list", "range", "vars",
+            "classmethod", "getattr", "locals", "repr", "zip", "compile", "globals", "map", "reversed", "__import__",
+            "complex", "hasattr", "max", "round", "delattr", "hash", "memoryview", "set",
+        }
 
     def safe_name(name):
         return name + ("_" if is_pykeyword(name) else "")
