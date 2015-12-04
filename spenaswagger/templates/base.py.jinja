@@ -17,9 +17,10 @@ class SwagJsonEncoder(json.JSONEncoder):
 
 class API:
     class Error(Exception):
-        def __init__(self, code, message=""):
+        def __init__(self, code, message="", expected=False):
             self.code = code
             self.message = message
+            self.expected = expected
 
     def __init__(self, base_url, user, password, debug=False):
         self.session = requests.Session()
