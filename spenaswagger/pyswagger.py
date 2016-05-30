@@ -2,6 +2,7 @@ from .datamodel import Transformer
 from jinja2 import PackageLoader, Environment
 import os
 import re
+from numbers import Number
 
 
 KEYWORDS = {
@@ -78,6 +79,8 @@ def gen_py(api_categories):
     except FileExistsError:
         pass
 
+    open("generated/__init__.py", "w").close()
+
     env = Environment(loader=PackageLoader("spenaswagger", "templates"), trim_blocks=True, lstrip_blocks=True)
 
     def is_pykeyword(arg):
@@ -97,12 +100,23 @@ def gen_py(api_categories):
             return "False"
         elif arg == "true":
             return "True"
+        elif isinstance(arg, Number):
+            return str(arg)
         return '"%s"' % arg
 
     def as_args(args):
+        def type_str(p):
+            if not p.type:
+                return ""
+
+            # Needs python 3.5
+            # if p.type == "list":
+            #     return ":Sequence[%s]" % p.items
+            return ":" + str(p.type)
+
         args = list(sorted(args, key=lambda a: a.name))
-        req_args = [safe_name(a.name) for a in args if a.required]
-        def_args = [safe_name(a.name) + "=" + to_value(getattr(a, "default", None)) for a in args if not a.required]
+        req_args = [safe_name(a.name) + type_str(a) for a in args if a.required]
+        def_args = [safe_name(a.name) + type_str(a) + "=" + to_value(getattr(a, "default", None)) for a in args if not a.required]
         return ', '.join(["self"] + req_args + def_args)
 
     def query_args(parameters):

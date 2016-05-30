@@ -77,6 +77,8 @@ def swagit(user, password, url):
                     if parameter["paramType"] == "body":
                         if item_type == "Principal":
                             continue
+                        if item_type == "User":
+                            continue
 
                     parameters[parameter["name"]] = Parameter(parameter["defaultValue"],
                                                               parameter["description"],
