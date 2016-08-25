@@ -112,7 +112,12 @@ def gen_py(api_categories):
             # Needs python 3.5
             # if p.type == "list":
             #     return ":Sequence[%s]" % p.items
-            return ":" + str(p.type)
+
+            # Type hints only for base types
+            if p.type in KEYWORDS:
+                return ":" + str(p.type)
+            else:
+                return ""
 
         args = list(sorted(args, key=lambda a: a.name))
         req_args = [safe_name(a.name) + type_str(a) for a in args if a.required]
